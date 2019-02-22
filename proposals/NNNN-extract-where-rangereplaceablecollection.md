@@ -63,6 +63,12 @@ readyTasks.removeAll(where: {
 
 ## Proposed solution
 
+Introduce a new method in an extension to `RangeReplaceableCollection` with the following signature:
+
+```swift
+mutating func extract(where shouldBeExtracted: (Self.Element) throws -> Bool) -> Self rethrows
+```
+
 Using the proposed API, the solution is far more concise and readable:
 
 ```swift
