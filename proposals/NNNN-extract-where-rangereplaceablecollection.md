@@ -1,4 +1,4 @@
-# Feature name
+# Add `extract...` counterpart to bulk `remove...` methods that return removed elements
 
 * Proposal: [SE-NNNN](NNNN-extract-where-rangereplaceablecollection.md)
 * Authors: [Frederick Kellison-Linn](https://github.com/jumhyn)
@@ -15,9 +15,9 @@
 
 ## Introduction
 
-When removing elements from a collection, it's often desireable to retrieve the elements that were removed for further processing. Currently, `RangeReplaceableCollection` offers this functionality for methods like `removeFirst()`, `removeLast()`, and `removeAt()`, but bulk removal functions (such as `removeAll(where:)`) don't return anything at all, requiring the user to copy the elements out of the collection beforehand if they want to save them.
+When removing elements from a collection, it's often desireable to retrieve the elements that were removed for further processing. Currently, `RangeReplaceableCollection` offers this functionality for methods like `removeFirst()`, `removeLast()`, and `removeAt(_:)`, but bulk removal functions (such as `removeAll(where:)`) don't return anything at all, requiring the user to copy the elements out of the collection beforehand if they want to save them.
 
-The proposed `extractAll(where:)` method would fill this hole, by removing the desired elements and returning a collection of the elements that were removed.
+The proposed `extract...` family of methods would fill this hole, by removing the desired elements and returning a collection of the elements that were removed.
 
 Swift-evolution thread: [Add `extract(where:)` method to `RangeReplaceableCollection`](https://forums.swift.org/t/add-extract-where-method-to-rangereplaceablecollection/20745)
 
@@ -63,10 +63,16 @@ readyTasks.removeAll(where: {
 
 ## Proposed solution
 
-Introduce a new method in an extension to `RangeReplaceableCollection` with the following signature:
+Introduce new extension methods to `RangeReplaceableCollection` with the following signatures:
 
 ```swift
-mutating func extractAll(where shouldBeExtracted: (Self.Element) throws -> Bool) -> Self rethrows
+public mutating func extractAll(where shouldBeExtracted: (Self.Element) throws -> Bool) -> Self rethrows
+
+public mutating func extractLast(_ k: Int) -> Self
+
+public mutating func extractFirst(_ k: Int) -> Self
+
+public mutating func extractSubrange(_ bounds: Range<Index>) -> Self
 ```
 
 Using the proposed API, the solution is far more concise and readable:
@@ -81,23 +87,9 @@ readyTasks.forEach { $0.execute() }
 Add the following method to `RangeReplaceableCollection`
 
 ```swift
-  /// Removes and returns all the elements that satisfy the given predicate.
-  ///
-  /// Use this method in place of `removeAll(where:)` to retain the removed
-  /// elements for further processing.
-  ///
-  ///     var phrase = "The rain in Spain stays mainly in the plain."
-  ///
-  ///     let vowels: Set<Character> = ["a", "e", "i", "o", "u"]
-  ///     let extracted = phrase.removeAll(where: { vowels.contains($0) })
-  ///     // phrase == "Th rn n Spn stys mnly n th pln."
-  ///     // extracted == "eaiiaiaaioeai"
-  ///
-  /// - Parameter shouldBeExtracted: A closure that takes an element of the
-  ///   sequence as its argument and returns a Boolean value indicating
-  ///   whether the element should be extracted from the collection.
-  ///
-  /// - Complexity: O(*n*), where *n* is the length of the collection.
+extension RangeReplaceableCollection {
+  /// Documentation adapted from `remove...` variants
+  /// ...
   @inlinable
   public mutating func extractAll(
     where shouldBeExtracted: (Element) throws -> Bool
@@ -106,13 +98,52 @@ Add the following method to `RangeReplaceableCollection`
     extracted.reserveCapacity(self.count)
     try self.removeAll {
       let shouldBeRemoved = shouldBeExtracted($0)
-      if shouldBeRemoved
+      if shouldBeRemoved {
         extracted.append($0)
       }
       return shouldBeRemoved
     }
     return extracted
   }
+  
+  @inlinable
+  public mutating func extractSubrange(_ bounds: Range<Index>) -> Self {
+    let extracted = Self(self[bounds])
+    self.removeSubrange(bounds)
+    return extracted
+  }
+  
+  @inlinable
+  public mutating func extractFirst(_ k: Int) -> Self {
+    if k == 0 { return Self() }
+    _precondition(k >= 0, "Number of elements to remove should be non-negative")
+    _precondition(count >= k,
+    "Can't remove more items from a collection than it has")
+    let end = index(startIndex, offsetBy: k)
+    let subrange = startIndex..<end
+    let extracted = Self(self[subrange])
+    removeSubrange(subrange)
+    return extracted
+  }
+}
+
+extension RangeReplaceableCollection where Self : BidirectionalCollection {
+  @inlinable
+  public mutating func extractLast(_ k: Int) -> Self {
+    if k == 0 { return Self() }
+    _precondition(k >= 0, "Number of elements to remove should be non-negative")
+    _precondition(count >= k,
+                  "Can't remove more items from a collection than it contains")
+    let end = endIndex
+    let subrange = index(end, offsetBy: -k)..<end
+    let extracted = Self(self[subrange])
+    if _customRemoveLast(k) {
+      return extracted
+    }
+    removeSubrange(subrange)
+    return extracted
+  }
+}
 ```
 
 ## Source compatibility
@@ -131,7 +162,7 @@ None.
 
 ### Naming
 
-Other potential names were brought up in discussion, but `extractAll(where:)` seemed to be the most favored. Other suggestions included `filterOut(where:)`, `discardAll(where:)`, and `extract(where:)`.
+Other potential names were brought up in discussion, but `extract...` seemed to be the most favored. Other suggestions included `filterOut...`, and `discard...`.
 
 ### Return type
 
