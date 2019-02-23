@@ -100,18 +100,16 @@ Add the following method to `RangeReplaceableCollection`
   /// - Complexity: O(*n*), where *n* is the length of the collection.
   @inlinable
   public mutating func extractAll(
-      where shouldBeExtracted: (Element) throws -> Bool
+    where shouldBeExtracted: (Element) throws -> Bool
   ) rethrows {
     var extracted = Self()
     extracted.reserveCapacity(self.count)
     try self.removeAll {
-        if shouldBeExtracted($0) {
-            extracted.append($0)
-            return true
-        }
-        else {
-            return false
-        }
+      let shouldBeRemoved = shouldBeExtracted($0)
+      if shouldBeRemoved
+        extracted.append($0)
+      }
+      return shouldBeRemoved
     }
     return extracted
   }
