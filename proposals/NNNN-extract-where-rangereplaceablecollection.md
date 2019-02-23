@@ -102,11 +102,17 @@ Add the following method to `RangeReplaceableCollection`
   public mutating func extractAll(
       where shouldBeExtracted: (Element) throws -> Bool
   ) rethrows {
-    // Note: this implementation is a proof-of-concept and should
-    // be revised since it calls the closure multiple times on each
-    // element.
-    let extracted = try Self(self.lazy.filter(shouldBeExtracted))
-    try self.removeAll(where: shouldBeExtracted)
+    var extracted = Self()
+    extracted.reserveCapacity(self.count)
+    try self.removeAll {
+        if shouldBeExtracted($0) {
+            extracted.append($0)
+            return true
+        }
+        else {
+            return false
+        }
+    }
     return extracted
   }
 ```
