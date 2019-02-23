@@ -3,11 +3,11 @@
 * Proposal: [SE-NNNN](NNNN-extract-where-rangereplaceablecollection.md)
 * Authors: [Frederick Kellison-Linn](https://github.com/jumhyn)
 * Review Manager: TBD
-* Status: **Awaiting implementation**
+* Status: **Awaiting Review**
+* Implementation: [apple/swift#22855](https://github.com/apple/swift/pull/22855)
 
 *During the review process, add the following fields as needed:*
 
-* Implementation: [apple/swift#NNNNN](https://github.com/apple/swift/pull/NNNNN)
 * Decision Notes: [Rationale](https://forums.swift.org/), [Additional Commentary](https://forums.swift.org/)
 * Bugs: [SR-NNNN](https://bugs.swift.org/browse/SR-NNNN), [SR-MMMM](https://bugs.swift.org/browse/SR-MMMM)
 * Previous Revision: [1](https://github.com/apple/swift-evolution/blob/...commit-ID.../proposals/NNNN-filename.md)
