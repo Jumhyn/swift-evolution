@@ -66,14 +66,14 @@ readyTasks.removeAll(where: {
 Introduce a new method in an extension to `RangeReplaceableCollection` with the following signature:
 
 ```swift
-mutating func extract(where shouldBeExtracted: (Self.Element) throws -> Bool) -> Self rethrows
+mutating func extractAll(where shouldBeExtracted: (Self.Element) throws -> Bool) -> Self rethrows
 ```
 
 Using the proposed API, the solution is far more concise and readable:
 
 ```swift
 let readyTasks = taskList.extractAll(where: { $0.isReady })
-readyTasks.forEach { $0.execute }
+readyTasks.forEach { $0.execute() }
 ```
 
 ## Detailed design
@@ -127,7 +127,7 @@ None.
 
 ### Naming
 
-Other potential names were brought up in discussion, but `extractAll(where:)` seemed to be the most favored. Other suggestions included `filterOut(where:)`, `discard(where:)`, and `extract(where:)`.
+Other potential names were brought up in discussion, but `extractAll(where:)` seemed to be the most favored. Other suggestions included `filterOut(where:)`, `discardAll(where:)`, and `extract(where:)`.
 
 ### Return type
 
@@ -135,7 +135,9 @@ Initial discussions had the return type as `[Self.Element]` rather than `Self`. 
 
 ### Overloading or modifying `removeAll(where:)`
 
-Using a different name for this API is unfortunate since some `remove...` methods already return the removed elements, which could lead to confusion. Thus, another possibility would be to change `removeAll(where:)` to be an `@discardableResult` function which always returns the removed elements. This was avoided since it would mean that even in the cases where the removed items are not needed, `removeAll(where:)` would allocate the memory to store the removed items.
+Using a different name for this API is unfortunate since some `remove...` methods already return the removed elements, which could lead to confusion.
+
+Thus, another possibility would be to change `removeAll(where:)` to be an `@discardableResult` function which always returns the removed elements. This was avoided since it would mean that even in the cases where the removed items are not needed, `removeAll(where:)` would allocate the memory to store the removed items.
 
 Overloading `removeAll(where:)` was also avoided since it would be a return-type overload which could be confusing and make the API more difficult to use.
 
