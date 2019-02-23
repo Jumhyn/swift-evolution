@@ -101,7 +101,7 @@ Add the following method to `RangeReplaceableCollection`
   @inlinable
   public mutating func extractAll(
     where shouldBeExtracted: (Element) throws -> Bool
-  ) rethrows {
+  ) rethrows -> Self {
     var extracted = Self()
     extracted.reserveCapacity(self.count)
     try self.removeAll {
